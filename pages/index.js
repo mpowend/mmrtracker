@@ -9,6 +9,7 @@ import ReactLoading from "react-loading"
 import { LineChart, XAxis, YAxis, Tooltip, CartesianGrid, Line } from "recharts"
 import { Button, ButtonGroup, Chip, Divider } from "@material-ui/core"
 
+var maxmmr = 0
 export default function Chart(props) {
   const { setCourse, backip } = useContext(AppContext)
   const [loading, setLoading] = useState(true)
@@ -27,7 +28,6 @@ export default function Chart(props) {
   console.log(loading)
 
   var data = []
-  var maxmmr = 0
 
   var load = () => {
     if (loading) {
