@@ -27,6 +27,7 @@ export default function Chart(props) {
   console.log(loading)
 
   var data = []
+  var maxmmr = 0
 
   var load = () => {
     if (loading) {
@@ -106,6 +107,7 @@ export default function Chart(props) {
           mmrChange = -mmrChange
         }
         mmr += mmrChange
+        maxmmr = maxmmr > mmr ? maxmmr : mmr
 
         if (i > d.length - 200)
           data.push({
@@ -132,6 +134,7 @@ export default function Chart(props) {
   }, [hide, loading])
 
   var refresh = () => {
+    maxmmr = 0
     setLoading(true)
     setHide(true)
   }
@@ -245,6 +248,10 @@ export default function Chart(props) {
 
       <div className={styles.info}>
         <Chip label={"new ranked matches: " + time} color="primary" />
+        <Chip
+          label={"max mmr in last 200 matches: " + maxmmr}
+          color="primary"
+        />
         <Chip
           label={
             "Current rank: " + (profile && profile[profile.length - 1].mmr)
