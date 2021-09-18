@@ -9,7 +9,7 @@ import ReactLoading from "react-loading"
 import { LineChart, XAxis, YAxis, Tooltip, CartesianGrid, Line } from "recharts"
 import { Button, ButtonGroup, Chip, Divider } from "@material-ui/core"
 
-export default function index(props) {
+export default function Chart(props) {
   const { setCourse, backip } = useContext(AppContext)
   const [loading, setLoading] = useState(true)
   const [hide, setHide] = useState(true)
