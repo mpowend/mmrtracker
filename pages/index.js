@@ -41,6 +41,9 @@ export default function Chart(props) {
         case "teramir":
           var playerID = 210899035
           break
+        case "darjaryan":
+          var playerID = 491280560
+          break
         default:
           break
       }
@@ -81,13 +84,18 @@ export default function Chart(props) {
 
       //mpowend 1240
       //teramir 1340
-      var mmr
+
+      //puyan now 1240
+      var mmr = 0
       switch (player) {
         case "mpowend":
           mmr = 1240
           break
         case "teramir":
           mmr = 1340
+          break
+        case "darjaryan":
+          mmr = 980
           break
         default:
           break
@@ -117,7 +125,7 @@ export default function Chart(props) {
               (date.getMonth() + 1) +
               "/" +
               date.getFullYear(),
-            party: (game.party_size - 1) * 10,
+            party: game.party_size == 1 ? 0 : game.party_size * 10,
             win: !(lose || leave),
             mmr: mmr,
           })
@@ -161,6 +169,16 @@ export default function Chart(props) {
           }}
         >
           Teramir
+        </Button>
+        <Button
+          variant={player == "darjaryan" ? "contained" : "outlined"}
+          disabled={loading ? true : false}
+          onClick={() => {
+            setPlayer("darjaryan")
+            refresh()
+          }}
+        >
+          Darjaryan
         </Button>
       </ButtonGroup>
       {hide ? (
@@ -248,10 +266,7 @@ export default function Chart(props) {
 
       <div className={styles.info}>
         <Chip label={"new ranked matches: " + time} color="primary" />
-        <Chip
-          label={"max mmr in last 200 matches: " + maxmmr}
-          color="primary"
-        />
+        <Chip label={"highest mmr: " + maxmmr} color="primary" />
         <Chip
           label={
             "Current rank: " + (profile && profile[profile.length - 1].mmr)
