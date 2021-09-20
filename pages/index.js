@@ -10,6 +10,8 @@ import { LineChart, XAxis, YAxis, Tooltip, CartesianGrid, Line } from "recharts"
 import { Button, ButtonGroup, Chip, Divider } from "@material-ui/core"
 
 var maxmmr = 0
+var width = 1920
+var height = 1080
 export default function Chart(props) {
   const { setCourse, backip } = useContext(AppContext)
   const [loading, setLoading] = useState(true)
@@ -138,6 +140,10 @@ export default function Chart(props) {
   }
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      width = window.innerWidth
+      height = window.innerHeight
+    }
     load()
   }, [hide, loading])
 
@@ -185,15 +191,15 @@ export default function Chart(props) {
         <ReactLoading
           type="bars"
           color="#11111155"
-          height={"650px"}
-          width={"600px"}
+          height={height * 0.85}
+          width={width * 0.4}
           className={styles.loading}
         />
       ) : (
         <LineChart
           id="main-chart"
-          width={1500}
-          height={650}
+          width={width * 0.95}
+          height={height * 0.85}
           data={profile}
           margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
         >
