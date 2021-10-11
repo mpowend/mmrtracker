@@ -6,10 +6,21 @@ import Router from "next/router"
 import { AppContext } from "../context/state"
 import { useCookies } from "react-cookie"
 import ReactLoading from "react-loading"
-import { LineChart, XAxis, YAxis, Tooltip, CartesianGrid, Line } from "recharts"
+import {
+  LineChart,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Line,
+  ReferenceLine,
+} from "recharts"
 import { Button, ButtonGroup, Chip, Divider } from "@material-ui/core"
 
 var maxmmr = 0
+var localmaxmmr = 0
+var ticks = []
+var showCount = 250
 var width = 1920
 var height = 1080
 export default function Chart(props) {
@@ -131,7 +142,8 @@ export default function Chart(props) {
         mmr += mmrChange
         maxmmr = maxmmr > mmr ? maxmmr : mmr
 
-        if (i > d.length - 800)
+        if (i > d.length - showCount) {
+          localmaxmmr = localmaxmmr > mmr ? localmaxmmr : mmr
           data.push({
             date:
               date.getDate() +
@@ -143,8 +155,21 @@ export default function Chart(props) {
             win: !(lose || leave),
             mmr: mmr,
           })
+        }
       }
+
+      var temp = [
+        0, 154, 308, 462, 616, 770, 924, 1078, 1232, 1386, 1540, 1694, 1848,
+        2002, 2156, 2310, 2464, 2618, 2772, 2926, 3080, 3234, 3388, 3542, 3696,
+        3850, 4004, 4158, 4312, 4466, 4620, 4820, 5020, 5220, 5420, 9999,
+      ]
+      for (let i = 0; i < d.length; i++) {
+        if (localmaxmmr >= temp[i]) ticks.push(temp[i + 1])
+      }
+
       console.log(d)
+      console.log("LMM:" + localmaxmmr)
+      console.log(ticks)
       setTime(ttime)
       setProfile(data)
       setHide(false)
@@ -164,47 +189,47 @@ export default function Chart(props) {
     }
   }
 
-  var loadall = () => {
-    var players = ["mpowend", "teramir", "darjaryan"]
-    var loadC = 0
-    if (loading) {
-      // offset=900&&
-      for (let i = 0; i < players.length; i++) {
-        const playerID = getPlayerID(players[i])
-        fetch(
-          "https://api.opendota.com/api/players/" +
-            playerID +
-            "/matches/?lobby_type=7",
-          {
-            method: "get",
-          }
-        )
-          .then(async (res) => {
-            if (res.status === 401) {
-              setWrong(true)
-            } else {
-              return await res.json()
-            }
-          })
-          .then(async (r) => {
-            var temp = []
-            console.log("r")
-            console.log(r)
-            r = r.reverse()
-            for (let i = 0; i < r.length; i++) {
-              const element = r[i]
-              if (element.lobby_type == 7) {
-                temp.push(element)
-              }
-            }
-            console.log("temp")
-            console.log(temp)
-            data[i] = temp
-            loadC++
-          })
-      }
-    }
-  }
+  // var loadall = () => {
+  //   var players = ["mpowend", "teramir", "darjaryan"]
+  //   var loadC = 0
+  //   if (loading) {
+  //     // offset=900&&
+  //     for (let i = 0; i < players.length; i++) {
+  //       const playerID = getPlayerID(players[i])
+  //       fetch(
+  //         "https://api.opendota.com/api/players/" +
+  //           playerID +
+  //           "/matches/?lobby_type=7",
+  //         {
+  //           method: "get",
+  //         }
+  //       )
+  //         .then(async (res) => {
+  //           if (res.status === 401) {
+  //             setWrong(true)
+  //           } else {
+  //             return await res.json()
+  //           }
+  //         })
+  //         .then(async (r) => {
+  //           var temp = []
+  //           console.log("r")
+  //           console.log(r)
+  //           r = r.reverse()
+  //           for (let i = 0; i < r.length; i++) {
+  //             const element = r[i]
+  //             if (element.lobby_type == 7) {
+  //               temp.push(element)
+  //             }
+  //           }
+  //           console.log("temp")
+  //           console.log(temp)
+  //           data[i] = temp
+  //           loadC++
+  //         })
+  //     }
+  //   }
+  // }
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -216,10 +241,15 @@ export default function Chart(props) {
 
   var refresh = () => {
     maxmmr = 0
+    localmaxmmr = 0
+    ticks = []
     setLoading(true)
     setHide(true)
   }
 
+  var white = (text) => {
+    return <div style={{ color: "white" }}>{text}</div>
+  }
   return (
     <div className={styles.container}>
       <ButtonGroup color="secondary">
@@ -253,7 +283,7 @@ export default function Chart(props) {
         >
           Darjaryan
         </Button>
-        <Button
+        {/* <Button
           variant={player == "netflix" ? "contained" : "outlined"}
           disabled={loading ? true : false}
           onClick={() => {
@@ -262,7 +292,7 @@ export default function Chart(props) {
           }}
         >
           Netflix
-        </Button>
+        </Button> */}
         <Button
           variant={player == "lim" ? "contained" : "outlined"}
           disabled={loading ? true : false}
@@ -288,10 +318,10 @@ export default function Chart(props) {
           width={width * 0.95}
           height={height * 0.85}
           data={profile}
-          margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
+          margin={{ top: 10, right: 0, left: 0, bottom: 5 }}
         >
           <XAxis dataKey="date" />
-          <YAxis tickCount={8} />
+          <YAxis ticks={ticks} domain={[0, ticks[ticks.length - 1]]} />
           <Tooltip />
           <defs>
             {/* <linearGradient
@@ -337,7 +367,7 @@ export default function Chart(props) {
                       })}
                   </linearGradient> */}
           </defs>
-          <CartesianGrid strokeDasharray="1 10" stroke="#bdc3c7" />
+          {/* <CartesianGrid strokeDasharray="1 10" stroke="#bdc3c7" /> */}
           <Line
             type="monotone"
             dataKey="mmr"
@@ -353,6 +383,128 @@ export default function Chart(props) {
             yAxisId={0}
             dot={false}
           />
+
+          {/* <ReferenceLine
+              y={0}
+              // label="H I"
+              stroke="#6da035"
+              strokeDasharray="3 3"
+            /> */}
+          <ReferenceLine
+            y={154}
+            label="H II"
+            stroke="#6da035"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={308}
+            label="H III"
+            stroke="#6da035"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={462}
+            label="H IV"
+            stroke="#6da035"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={616}
+            label="H V"
+            stroke="#6da035"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={770}
+            label="G I"
+            stroke="#764c2b"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={924}
+            label="G II"
+            stroke="#764c2b"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={1078}
+            label="G III"
+            stroke="#764c2b"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={1232}
+            label="G IV"
+            stroke="#764c2b"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={1386}
+            label="G V"
+            stroke="#764c2b"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={1540}
+            label="C I"
+            stroke="#138c8b"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={1694}
+            label="C II"
+            stroke="#138c8b"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={1848}
+            label="C III"
+            stroke="#138c8b"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={2002}
+            label="C IV"
+            stroke="#138c8b"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={2156}
+            label="C V"
+            stroke="#138c8b"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={2310}
+            label="A I"
+            stroke="#229271"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={2464}
+            label="A II"
+            stroke="#229271"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={2618}
+            label="A III"
+            stroke="#229271"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={2772}
+            label="A IV"
+            stroke="#229271"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={2926}
+            label="A V"
+            stroke="#229271"
+            strokeDasharray="3 3"
+          />
+
           {/* <Line type="monotone" dataKey="pv" stroke="#387908" yAxisId={1} /> */}
         </LineChart>
       )}
