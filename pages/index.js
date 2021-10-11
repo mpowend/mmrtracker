@@ -131,7 +131,7 @@ export default function Chart(props) {
         mmr += mmrChange
         maxmmr = maxmmr > mmr ? maxmmr : mmr
 
-        if (i > d.length - 200)
+        if (i > d.length - 800)
           data.push({
             date:
               date.getDate() +
