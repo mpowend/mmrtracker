@@ -15,6 +15,7 @@ var height = 1080
 export default function Chart(props) {
   const { setCourse, backip } = useContext(AppContext)
   const [loading, setLoading] = useState(true)
+  const [loaded, setLoaded] = useState(0)
   const [hide, setHide] = useState(true)
   const [profileLoading, setProfileLoading] = useState(true)
   const [results, setResults] = useState()
@@ -45,6 +46,12 @@ export default function Chart(props) {
           break
         case "darjaryan":
           var playerID = 491280560
+          break
+        case "netflix":
+          var playerID = 846545366
+          break
+        case "lim":
+          var playerID = 387307098
           break
         default:
           break
@@ -83,11 +90,13 @@ export default function Chart(props) {
     }
     if (!loading) {
       var d = results
+      var tempdata = []
 
       //mpowend 1240
       //teramir 1340
-
-      //puyan now 1240
+      //puyan 980
+      // netflix 2340
+      // lim 820
       var mmr = 0
       switch (player) {
         case "mpowend":
@@ -98,6 +107,9 @@ export default function Chart(props) {
           break
         case "darjaryan":
           mmr = 980
+          break
+        case "lim":
+          mmr = 150
           break
         default:
           break
@@ -136,6 +148,61 @@ export default function Chart(props) {
       setTime(ttime)
       setProfile(data)
       setHide(false)
+    }
+  }
+
+  const getPlayerID = (p) => {
+    switch (p) {
+      case "mpowend":
+        return 358792797
+      case "teramir":
+        return 210899035
+      case "darjaryan":
+        return 491280560
+      default:
+        break
+    }
+  }
+
+  var loadall = () => {
+    var players = ["mpowend", "teramir", "darjaryan"]
+    var loadC = 0
+    if (loading) {
+      // offset=900&&
+      for (let i = 0; i < players.length; i++) {
+        const playerID = getPlayerID(players[i])
+        fetch(
+          "https://api.opendota.com/api/players/" +
+            playerID +
+            "/matches/?lobby_type=7",
+          {
+            method: "get",
+          }
+        )
+          .then(async (res) => {
+            if (res.status === 401) {
+              setWrong(true)
+            } else {
+              return await res.json()
+            }
+          })
+          .then(async (r) => {
+            var temp = []
+            console.log("r")
+            console.log(r)
+            r = r.reverse()
+            for (let i = 0; i < r.length; i++) {
+              const element = r[i]
+              if (element.lobby_type == 7) {
+                temp.push(element)
+              }
+            }
+            console.log("temp")
+            console.log(temp)
+            data[i] = temp
+            loadC++
+          })
+      }
     }
   }
 
@@ -185,6 +252,26 @@ export default function Chart(props) {
           }}
         >
           Darjaryan
+        </Button>
+        <Button
+          variant={player == "netflix" ? "contained" : "outlined"}
+          disabled={loading ? true : false}
+          onClick={() => {
+            setPlayer("netflix")
+            refresh()
+          }}
+        >
+          Netflix
+        </Button>
+        <Button
+          variant={player == "lim" ? "contained" : "outlined"}
+          disabled={loading ? true : false}
+          onClick={() => {
+            setPlayer("lim")
+            refresh()
+          }}
+        >
+          Lim
         </Button>
       </ButtonGroup>
       {hide ? (
@@ -275,7 +362,10 @@ export default function Chart(props) {
         <Chip label={"highest mmr: " + maxmmr} color="primary" />
         <Chip
           label={
-            "Current rank: " + (profile && profile[profile.length - 1].mmr)
+            "Current rank: " +
+            (profile &&
+              profile[profile.length - 1] &&
+              profile[profile.length - 1].mmr)
           }
           color="secondary"
         />
