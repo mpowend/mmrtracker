@@ -497,6 +497,7 @@ export default function Chart(props) {
             players.map((element, index) => {
               return (
                 <Line
+                  key={element}
                   type="monotone"
                   dataKey={element}
                   stroke={colors[index]}
