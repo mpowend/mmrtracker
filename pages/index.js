@@ -31,7 +31,7 @@ export default function Chart(props) {
   const [profileLoading, setProfileLoading] = useState(true)
   const [results, setResults] = useState()
   const [profile, setProfile] = useState()
-  const [time, setTime] = useState()
+  const [rankedMatchCount, setRankedMatchCount] = useState()
   const [currentPage, setCurrentPage] = useState(1)
   const [searchList, setSearchList] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
@@ -71,10 +71,7 @@ export default function Chart(props) {
           console.log(r)
           r = r.reverse()
           for (let i = 0; i < r.length; i++) {
-            const element = r[i]
-            if (element.lobby_type == 7) {
-              temp.push(element)
-            }
+            temp.push(r[i])
           }
           console.log("temp")
           console.log(temp)
@@ -109,7 +106,7 @@ export default function Chart(props) {
       //   default:
       //     break
       // }
-      var ttime = 0
+      var rankedMatches = 0
       for (let i = 0; i < d.length; i++) {
         const game = d[i]
         var date = new Date(game.start_time * 1000)
@@ -118,7 +115,7 @@ export default function Chart(props) {
           (!game.radiant_win && game.player_slot < 128)
         const leave = game.leaver_status == 1
         var mmrChange = game.party_size == 1 ? 30 : 20
-        ttime += 1
+        rankedMatches += 1
 
         if (lose || leave) {
           mmrChange = -mmrChange
@@ -154,7 +151,7 @@ export default function Chart(props) {
       console.log(d)
       console.log("LMM:" + localmaxmmr)
       console.log(ticks)
-      setTime(ttime)
+      setRankedMatchCount(rankedMatches)
       setProfile(data)
       setHide(false)
     }
@@ -285,7 +282,7 @@ export default function Chart(props) {
         var d = results[i].games
         var tempdata = {}
         var mmr = getBaseMMR(results[i].name)
-        var ttime = 0
+        var rankedMatches = 0
         var data = []
         for (let i = 0; i < d.length; i++) {
           const game = d[i]
@@ -295,7 +292,7 @@ export default function Chart(props) {
             (!game.radiant_win && game.player_slot < 128)
           const leave = game.leaver_status == 1
           var mmrChange = game.party_size == 1 ? 30 : 20
-          ttime += 1
+          rankedMatches += 1
 
           if (lose || leave) {
             mmrChange = -mmrChange
@@ -345,7 +342,7 @@ export default function Chart(props) {
       console.log(finalAll)
       console.log("LMM:" + localmaxmmr)
       console.log(ticks)
-      setTime(ttime)
+      setRankedMatchCount(rankedMatches)
       setProfile(finalAll)
       setHide(false)
     }
@@ -367,10 +364,6 @@ export default function Chart(props) {
     data = []
     setLoading(true)
     setHide(true)
-  }
-
-  var white = (text) => {
-    return <div style={{ color: "white" }}>{text}</div>
   }
   return (
     <div className={styles.container}>
@@ -699,7 +692,10 @@ export default function Chart(props) {
       )}
 
       <div className={styles.info}>
-        <Chip label={"new ranked matches: " + time} color="primary" />
+        <Chip
+          label={"new ranked matches: " + rankedMatchCount}
+          color="primary"
+        />
         <Chip label={"highest mmr: " + maxmmr} color="primary" />
         <Chip
           label={
