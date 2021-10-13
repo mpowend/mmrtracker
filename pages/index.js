@@ -203,40 +203,75 @@ export default function Chart(props) {
     if (loading) {
       // offset=900&&
       var tempres = []
-      for (let i = 0; i < players.length; i++) {
-        const playerID = getPlayerID(players[i])
-        await fetch(
-          "https://api.opendota.com/api/players/" +
-            playerID +
-            "/matches/?lobby_type=7",
-          {
-            method: "get",
-          }
-        )
-          .then(async (res) => {
-            if (res.status === 401) {
-              setWrong(true)
-            } else {
-              return await res.json()
+      // for (let i = 0; i < players.length; i++) {
+      await Promise.all(
+        players.map(async (element, index) => {
+          await fetch(
+            "https://api.opendota.com/api/players/" +
+              getPlayerID(element) +
+              "/matches/?lobby_type=7",
+            {
+              method: "get",
             }
-          })
-          .then(async (r) => {
-            var temp = []
-            console.log("r")
-            console.log(r)
-            r = r.reverse()
-            for (let i = 0; i < r.length; i++) {
-              const element = r[i]
-              if (element.lobby_type == 7) {
-                temp.push(element)
+          )
+            .then(async (res) => {
+              if (res.status === 401) {
+                setWrong(true)
+              } else {
+                return await res.json()
               }
-            }
-            console.log("temp")
-            console.log(temp)
-            tempres.push({ name: players[i], games: temp })
-            loadC++
-          })
-      }
+            })
+            .then(async (r) => {
+              var temp = []
+              console.log("r")
+              console.log(r)
+              r = r.reverse()
+              for (let i = 0; i < r.length; i++) {
+                const element = r[i]
+                if (element.lobby_type == 7) {
+                  temp.push(element)
+                }
+              }
+              console.log("temp")
+              console.log(temp)
+              tempres.push({ name: element, games: temp })
+              loadC++
+            })
+        })
+      )
+      // const playerID = getPlayerID(players[i])
+      // fetch(
+      //   "https://api.opendota.com/api/players/" +
+      //     playerID +
+      //     "/matches/?lobby_type=7",
+      //   {
+      //     method: "get",
+      //   }
+      // )
+      //   .then(async (res) => {
+      //     if (res.status === 401) {
+      //       setWrong(true)
+      //     } else {
+      //       return await res.json()
+      //     }
+      //   })
+      //   .then(async (r) => {
+      //     var temp = []
+      //     console.log("r")
+      //     console.log(r)
+      //     r = r.reverse()
+      //     for (let i = 0; i < r.length; i++) {
+      //       const element = r[i]
+      //       if (element.lobby_type == 7) {
+      //         temp.push(element)
+      //       }
+      //     }
+      //     console.log("temp")
+      //     console.log(temp)
+      //     tempres.push({ name: players[i], games: temp })
+      //     loadC++
+      //   })
+      // }
 
       console.log("tempres")
       console.log(tempres)
