@@ -42,31 +42,14 @@ export default function Chart(props) {
   console.log(loading)
 
   var data = []
+  const players = ["mpowend", "teramir", "darjaryan", "lim", "forlorn"]
+  const colors = ["#f1c40f", "#1abc9c", "#e74c3c", "#3498db", "#e67e22"]
 
   var load = () => {
     if (loading) {
       // offset=900&&
 
-      var playerID = 358792797
-      switch (player) {
-        case "mpowend":
-          var playerID = 358792797
-          break
-        case "teramir":
-          var playerID = 210899035
-          break
-        case "darjaryan":
-          var playerID = 491280560
-          break
-        case "netflix":
-          var playerID = 846545366
-          break
-        case "lim":
-          var playerID = 387307098
-          break
-        default:
-          break
-      }
+      var playerID = getPlayerID(player)
       fetch(
         "https://api.opendota.com/api/players/" +
           playerID +
@@ -108,23 +91,24 @@ export default function Chart(props) {
       //puyan 980
       // netflix 2340
       // lim 820
-      var mmr = 0
-      switch (player) {
-        case "mpowend":
-          mmr = 1240
-          break
-        case "teramir":
-          mmr = 1340
-          break
-        case "darjaryan":
-          mmr = 980
-          break
-        case "lim":
-          mmr = 150
-          break
-        default:
-          break
-      }
+      //forlorn 2960
+      var mmr = getBaseMMR(player)
+      // switch (player) {
+      //   case "mpowend":
+      //     mmr = 1240
+      //     break
+      //   case "teramir":
+      //     mmr = 1340
+      //     break
+      //   case "darjaryan":
+      //     mmr = 980
+      //     break
+      //   case "lim":
+      //     mmr = 150
+      //     break
+      //   default:
+      //     break
+      // }
       var ttime = 0
       for (let i = 0; i < d.length; i++) {
         const game = d[i]
@@ -184,65 +168,168 @@ export default function Chart(props) {
         return 210899035
       case "darjaryan":
         return 491280560
+      case "netflix":
+        return 846545366
+      case "lim":
+        return 387307098
+      case "forlorn":
+        return 212778035
       default:
-        break
+        return 358792797
     }
   }
 
-  // var loadall = () => {
-  //   var players = ["mpowend", "teramir", "darjaryan"]
-  //   var loadC = 0
-  //   if (loading) {
-  //     // offset=900&&
-  //     for (let i = 0; i < players.length; i++) {
-  //       const playerID = getPlayerID(players[i])
-  //       fetch(
-  //         "https://api.opendota.com/api/players/" +
-  //           playerID +
-  //           "/matches/?lobby_type=7",
-  //         {
-  //           method: "get",
-  //         }
-  //       )
-  //         .then(async (res) => {
-  //           if (res.status === 401) {
-  //             setWrong(true)
-  //           } else {
-  //             return await res.json()
-  //           }
-  //         })
-  //         .then(async (r) => {
-  //           var temp = []
-  //           console.log("r")
-  //           console.log(r)
-  //           r = r.reverse()
-  //           for (let i = 0; i < r.length; i++) {
-  //             const element = r[i]
-  //             if (element.lobby_type == 7) {
-  //               temp.push(element)
-  //             }
-  //           }
-  //           console.log("temp")
-  //           console.log(temp)
-  //           data[i] = temp
-  //           loadC++
-  //         })
-  //     }
-  //   }
-  // }
+  const getBaseMMR = (p) => {
+    switch (p) {
+      case "mpowend":
+        return 1240
+      case "teramir":
+        return 1340
+      case "darjaryan":
+        return 980
+      case "lim":
+        return 150
+      case "forlorn":
+        return 2320
+      default:
+        return 0
+    }
+  }
+
+  //all players in the same graph
+
+  const loadall = async () => {
+    var loadC = 0
+    if (loading) {
+      // offset=900&&
+      var tempres = []
+      for (let i = 0; i < players.length; i++) {
+        const playerID = getPlayerID(players[i])
+        await fetch(
+          "https://api.opendota.com/api/players/" +
+            playerID +
+            "/matches/?lobby_type=7",
+          {
+            method: "get",
+          }
+        )
+          .then(async (res) => {
+            if (res.status === 401) {
+              setWrong(true)
+            } else {
+              return await res.json()
+            }
+          })
+          .then(async (r) => {
+            var temp = []
+            console.log("r")
+            console.log(r)
+            r = r.reverse()
+            for (let i = 0; i < r.length; i++) {
+              const element = r[i]
+              if (element.lobby_type == 7) {
+                temp.push(element)
+              }
+            }
+            console.log("temp")
+            console.log(temp)
+            tempres.push({ name: players[i], games: temp })
+            loadC++
+          })
+      }
+
+      console.log("tempres")
+      console.log(tempres)
+      setResults(tempres)
+      setLoading(false)
+    }
+    if (!loading) {
+      var tempAllData = []
+
+      for (let i = 0; i < results.length; i++) {
+        var d = results[i].games
+        var tempdata = {}
+        var mmr = getBaseMMR(results[i].name)
+        var ttime = 0
+        var data = []
+        for (let i = 0; i < d.length; i++) {
+          const game = d[i]
+          var date = new Date(game.start_time * 1000)
+          const lose =
+            (game.radiant_win && game.player_slot > 127) ||
+            (!game.radiant_win && game.player_slot < 128)
+          const leave = game.leaver_status == 1
+          var mmrChange = game.party_size == 1 ? 30 : 20
+          ttime += 1
+
+          if (lose || leave) {
+            mmrChange = -mmrChange
+          }
+          mmr += mmrChange
+          maxmmr = maxmmr > mmr ? maxmmr : mmr
+
+          if (i > d.length - showCount) {
+            localmaxmmr = localmaxmmr > mmr ? localmaxmmr : mmr
+            data.push({
+              date:
+                date.getDate() +
+                "/" +
+                (date.getMonth() + 1) +
+                "/" +
+                date.getFullYear(),
+              party: game.party_size == 1 ? 0 : game.party_size * 10,
+              win: !(lose || leave),
+              mmr: mmr,
+            })
+          }
+        }
+        //after one player
+        tempAllData.push({ name: results[i].name, data: data })
+      }
+
+      //after all results
+      //34666
+      console.log("tempAllData")
+      console.log(tempAllData)
+      var temp = [
+        0, 154, 308, 462, 616, 770, 924, 1078, 1232, 1386, 1540, 1694, 1848,
+        2002, 2156, 2310, 2464, 2618, 2772, 2926, 3080, 3234, 3388, 3542, 3696,
+        3850, 4004, 4158, 4312, 4466, 4620, 4820, 5020, 5220, 5420, 9999,
+      ]
+      for (let i = 0; i < d.length; i++) {
+        if (localmaxmmr >= temp[i]) ticks.push(temp[i + 1])
+      }
+      var finalAll = []
+      for (let index = 0; index < showCount - 1; index++) {
+        let t = {}
+        for (let j = 0; j < tempAllData.length; j++) {
+          t[tempAllData[j].name] = tempAllData[j].data[index].mmr
+        }
+        finalAll.push(t)
+      }
+      console.log(finalAll)
+      console.log("LMM:" + localmaxmmr)
+      console.log(ticks)
+      setTime(ttime)
+      setProfile(finalAll)
+      setHide(false)
+    }
+  }
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       width = window.innerWidth
       height = window.innerHeight
     }
-    load()
+    if (player != "all") load()
+    else loadall()
   }, [hide, loading])
 
   var refresh = () => {
     maxmmr = 0
     localmaxmmr = 0
     ticks = []
+    data = []
     setLoading(true)
     setHide(true)
   }
@@ -302,6 +389,26 @@ export default function Chart(props) {
           }}
         >
           Lim
+        </Button>
+        <Button
+          variant={player == "forlorn" ? "contained" : "outlined"}
+          disabled={loading ? true : false}
+          onClick={() => {
+            setPlayer("forlorn")
+            refresh()
+          }}
+        >
+          Forlorn
+        </Button>
+        <Button
+          variant={player == "all" ? "contained" : "outlined"}
+          disabled={loading ? true : false}
+          onClick={() => {
+            setPlayer("all")
+            refresh()
+          }}
+        >
+          All (beta)
         </Button>
       </ButtonGroup>
       {hide ? (
@@ -368,21 +475,37 @@ export default function Chart(props) {
                   </linearGradient> */}
           </defs>
           {/* <CartesianGrid strokeDasharray="1 10" stroke="#bdc3c7" /> */}
-          <Line
-            type="monotone"
-            dataKey="mmr"
-            // stroke="url(#splitColor)"
-            stroke="#fed330"
-            yAxisId={0}
-            dot={false}
-          />
-          <Line
-            type="monotone"
-            dataKey="party"
-            stroke="#4a69bd"
-            yAxisId={0}
-            dot={false}
-          />
+          {player != "all" ? (
+            <React.Fragment>
+              <Line
+                type="monotone"
+                dataKey="mmr"
+                // stroke="url(#splitColor)"
+                stroke="#fed330"
+                yAxisId={0}
+                dot={false}
+              />
+              <Line
+                type="monotone"
+                dataKey="party"
+                stroke="#4a69bd"
+                yAxisId={0}
+                dot={false}
+              />
+            </React.Fragment>
+          ) : (
+            players.map((element, index) => {
+              return (
+                <Line
+                  type="monotone"
+                  dataKey={element}
+                  stroke={colors[index]}
+                  yAxisId={0}
+                  dot={false}
+                />
+              )
+            })
+          )}
 
           {/* <ReferenceLine
               y={0}
@@ -502,6 +625,36 @@ export default function Chart(props) {
             y={2926}
             label="A V"
             stroke="#229271"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={3080}
+            label="L I"
+            stroke="#8a1631"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={3234}
+            label="L II"
+            stroke="#8a1631"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={3388}
+            label="L III"
+            stroke="#8a1631"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={3542}
+            label="L IV"
+            stroke="#8a1631"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={3696}
+            label="L V"
+            stroke="#8a1631"
             strokeDasharray="3 3"
           />
 
