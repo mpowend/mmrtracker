@@ -351,7 +351,8 @@ export default function Chart(props) {
       for (let index = 0; index < showCount - 1; index++) {
         let t = {}
         for (let j = 0; j < tempAllData.length; j++) {
-          t[tempAllData[j].name] = tempAllData[j].data[index].mmr
+          if (tempAllData[j].data[index])
+            t[tempAllData[j].name] = tempAllData[j].data[index].mmr
         }
         finalAll.push(t)
       }
