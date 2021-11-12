@@ -42,8 +42,22 @@ export default function Chart(props) {
   console.log(loading)
 
   var data = []
-  const players = ["mpowend", "teramir", "darjaryan", "lim", "forlorn"]
-  const colors = ["#f1c40f", "#1abc9c", "#e74c3c", "#3498db", "#e67e22"]
+  const players = [
+    "mpowend",
+    "teramir",
+    "darjaryan",
+    "lim",
+    "forlorn",
+    "netflix",
+  ]
+  const colors = [
+    "#f1c40f",
+    "#1abc9c",
+    "#e74c3c",
+    "#3498db",
+    "#e67e22",
+    "#167e22",
+  ]
 
   var load = () => {
     if (loading) {
@@ -187,6 +201,8 @@ export default function Chart(props) {
       case "lim":
         return 150
       case "forlorn":
+        return 2320
+      case "netflix":
         return 2320
       default:
         return 0
@@ -398,7 +414,7 @@ export default function Chart(props) {
         >
           Darjaryan
         </Button>
-        {/* <Button
+        <Button
           variant={player == "netflix" ? "contained" : "outlined"}
           disabled={loading ? true : false}
           onClick={() => {
@@ -407,7 +423,7 @@ export default function Chart(props) {
           }}
         >
           Netflix
-        </Button> */}
+        </Button>
         <Button
           variant={player == "lim" ? "contained" : "outlined"}
           disabled={loading ? true : false}
