@@ -214,7 +214,7 @@ export default function Chart(props) {
       case "forlorn":
         return 2320
       case "netflix":
-        return 2160
+        return 2210
       default:
         return 0
     }
