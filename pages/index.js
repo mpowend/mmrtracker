@@ -31,7 +31,7 @@ export default function Chart(props) {
   const [profileLoading, setProfileLoading] = useState(true)
   const [results, setResults] = useState()
   const [profile, setProfile] = useState()
-  const [rankedMatchCount, setRankedMatchCount] = useState()
+  const [rankedWinrate, setRankedWinrate] = useState()
   const [currentPage, setCurrentPage] = useState(1)
   const [searchList, setSearchList] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
@@ -83,6 +83,9 @@ export default function Chart(props) {
           var temp = []
           console.log("r")
           console.log(r)
+          if (r == undefined) {
+            r = []
+          }
           r = r.reverse()
           for (let i = 0; i < r.length; i++) {
             temp.push(r[i])
@@ -120,7 +123,8 @@ export default function Chart(props) {
       //   default:
       //     break
       // }
-      var rankedMatches = 0
+      var wins = 0,
+        total = 0
       for (let i = 0; i < d.length; i++) {
         const game = d[i]
         var date = new Date(game.start_time * 1000)
@@ -129,23 +133,30 @@ export default function Chart(props) {
           (!game.radiant_win && game.player_slot < 128)
         const leave = game.leaver_status == 1
         var mmrChange = game.party_size == 1 ? 30 : 20
-        rankedMatches += 1
 
         if (lose || leave) {
           mmrChange = -mmrChange
         }
         mmr += mmrChange
         maxmmr = maxmmr > mmr ? maxmmr : mmr
+        if (date.getHours() >= 18 && date.getHours() <= 24) {
+          wins += Math.sign(mmrChange) > 0 ? 1 : 0
+          total += 1
+        }
 
         if (i > d.length - showCount) {
           localmaxmmr = localmaxmmr > mmr ? localmaxmmr : mmr
           data.push({
             date:
-              date.getDate() +
+              date.getFullYear() +
               "/" +
               (date.getMonth() + 1) +
               "/" +
-              date.getFullYear(),
+              date.getDate() +
+              " " +
+              date.getHours() +
+              ":" +
+              date.getMinutes(),
             party: game.party_size == 1 ? 0 : game.party_size * 10,
             win: !(lose || leave),
             mmr: mmr,
@@ -165,7 +176,7 @@ export default function Chart(props) {
       console.log(d)
       console.log("LMM:" + localmaxmmr)
       console.log(ticks)
-      setRankedMatchCount(rankedMatches)
+      setRankedWinrate(((wins * 100) / total).toFixed(2))
       setProfile(data)
       setHide(false)
     }
@@ -193,7 +204,7 @@ export default function Chart(props) {
   const getBaseMMR = (p) => {
     switch (p) {
       case "mpowend":
-        return 1240
+        return 1250
       case "teramir":
         return 1340
       case "darjaryan":
@@ -211,7 +222,7 @@ export default function Chart(props) {
 
   //all players in the same graph
 
-  const loadall = async () => {
+  const gameloadall = async () => {
     var loadC = 0
     if (loading) {
       // offset=900&&
@@ -238,6 +249,9 @@ export default function Chart(props) {
               var temp = []
               console.log("r")
               console.log(r)
+              if (r == undefined) {
+                r = []
+              }
               r = r.reverse()
               for (let i = 0; i < r.length; i++) {
                 const element = r[i]
@@ -293,12 +307,36 @@ export default function Chart(props) {
     }
     if (!loading) {
       var tempAllData = []
+      var wins = 0
+      var total = 0
+
+      //data management for analysis
+      var windata = new Array(24).fill(0)
+      var totaldata = new Array(24).fill(0)
 
       for (let i = 0; i < results.length; i++) {
         var d = results[i].games
         var tempdata = {}
         var mmr = getBaseMMR(results[i].name)
         var rankedMatches = 0
+
+        //data management for analysis
+        for (let i = 0; i < d.length; i++) {
+          const game = d[i]
+          var date = new Date(game.start_time * 1000)
+          const lose =
+            (game.radiant_win && game.player_slot > 127) ||
+            (!game.radiant_win && game.player_slot < 128)
+          const leave = game.leaver_status == 1
+
+          totaldata[date.getHours()] += 1
+          if (lose || leave) {
+            // windata[date.getHours()] -= 1
+          } else {
+            windata[date.getHours()] += 1
+          }
+        }
+
         var data = []
         for (let i = 0; i < d.length; i++) {
           const game = d[i]
@@ -315,6 +353,13 @@ export default function Chart(props) {
           }
           mmr += mmrChange
           maxmmr = maxmmr > mmr ? maxmmr : mmr
+
+          var hour = 21,
+            hourdif = 1
+          if (date.getHours() >= hour && date.getHours() <= hour + hourdif) {
+            wins += Math.sign(mmrChange) > 0 ? 1 : 0
+            total += 1
+          }
 
           if (i > d.length - showCount) {
             localmaxmmr = localmaxmmr > mmr ? localmaxmmr : mmr
@@ -336,6 +381,15 @@ export default function Chart(props) {
       }
 
       //after all results
+
+      //data management for analysis
+      var res = 0
+      for (let i = 0; i < windata.length; i++) {
+        res += (windata[i] * 100) / totaldata[i]
+      }
+      res = (res / windata.length).toFixed(2)
+      setRankedWinrate(res)
+
       //34666
       console.log("tempAllData")
       console.log(tempAllData)
@@ -359,10 +413,371 @@ export default function Chart(props) {
       console.log(finalAll)
       console.log("LMM:" + localmaxmmr)
       console.log(ticks)
-      setRankedMatchCount(rankedMatches)
+      // setRankedWinrate(((wins * 100) / total).toFixed(2))
       setProfile(finalAll)
       setHide(false)
     }
+  }
+
+  const timeloadall = async () => {
+    var loadC = 0
+    var showCount = 250
+    if (loading) {
+      // offset=900&&
+      var tempres = []
+      // for (let i = 0; i < players.length; i++) {
+      await Promise.all(
+        players.map(async (element, index) => {
+          await fetch(
+            "https://api.opendota.com/api/players/" +
+              getPlayerID(element) +
+              "/matches/?lobby_type=7",
+            {
+              method: "get",
+            }
+          )
+            .then(async (res) => {
+              if (res.status === 401) {
+                setWrong(true)
+              } else {
+                return await res.json()
+              }
+            })
+            .then(async (r) => {
+              var temp = []
+              console.log("r")
+              console.log(r)
+              if (r == undefined) {
+                r = []
+              }
+              r = r.reverse()
+              for (let i = 0; i < r.length; i++) {
+                const element = r[i]
+                if (element.lobby_type == 7) {
+                  temp.push(element)
+                }
+              }
+              console.log("temp")
+              console.log(temp)
+              tempres.push({ name: element, games: temp })
+              loadC++
+            })
+        })
+      )
+      // const playerID = getPlayerID(players[i])
+      // fetch(
+      //   "https://api.opendota.com/api/players/" +
+      //     playerID +
+      //     "/matches/?lobby_type=7",
+      //   {
+      //     method: "get",
+      //   }
+      // )
+      //   .then(async (res) => {
+      //     if (res.status === 401) {
+      //       setWrong(true)
+      //     } else {
+      //       return await res.json()
+      //     }
+      //   })
+      //   .then(async (r) => {
+      //     var temp = []
+      //     console.log("r")
+      //     console.log(r)
+      //     r = r.reverse()
+      //     for (let i = 0; i < r.length; i++) {
+      //       const element = r[i]
+      //       if (element.lobby_type == 7) {
+      //         temp.push(element)
+      //       }
+      //     }
+      //     console.log("temp")
+      //     console.log(temp)
+      //     tempres.push({ name: players[i], games: temp })
+      //     loadC++
+      //   })
+      // }
+
+      console.log("tempres")
+      console.log(tempres)
+      setResults(tempres)
+      setLoading(false)
+    }
+    if (!loading) {
+      var tempAllData = []
+      var wins = 0
+      var total = 0
+      var gridDates = []
+
+      for (let i = 0; i < results.length; i++) {
+        var d = results[i].games
+        var player = i
+        var tempdata = {}
+        var mmr = getBaseMMR(results[i].name)
+        var rankedMatches = 0
+
+        //data management for analysis
+        for (let i = 0; i < d.length; i++) {
+          const game = d[i]
+          var date = new Date(game.start_time * 1000)
+          const lose =
+            (game.radiant_win && game.player_slot > 127) ||
+            (!game.radiant_win && game.player_slot < 128)
+          const leave = game.leaver_status == 1
+        }
+
+        //main loop
+        var data = []
+        var today = new Date(new Date().setHours(24, 0, 0, 0))
+        var counter = 0
+        for (let i = showCount; i >= 0; i--) {
+          // console.log("day " + i)
+          var day = new Date(today - i * 86400000)
+          for (; counter < d.length; counter++) {
+            // console.log("counter:" + counter)
+            const game = d[counter]
+            // console.log(game.start_time + " " + (day.getTime() / 1000 - 86400))
+            if (game.start_time > ~~((day.getTime() + 86400000) / 1000)) break
+            // console.log("game")
+            var date = new Date(game.start_time * 1000)
+            const lose =
+              (game.radiant_win && game.player_slot > 127) ||
+              (!game.radiant_win && game.player_slot < 128)
+            const leave = game.leaver_status == 1
+            var mmrChange = game.party_size == 1 ? 30 : 20
+            rankedMatches += 1
+
+            if (lose || leave) {
+              mmrChange = -mmrChange
+            }
+            mmr += mmrChange
+            maxmmr = maxmmr > mmr ? maxmmr : mmr
+            var hour = 21,
+              hourdif = 1
+            if (date.getHours() >= hour && date.getHours() <= hour + hourdif) {
+              wins += Math.sign(mmrChange) > 0 ? 1 : 0
+              total += 1
+            }
+          }
+
+          if (i < showCount) {
+            localmaxmmr = localmaxmmr > mmr ? localmaxmmr : mmr
+            data.push({
+              mmr: mmr,
+            })
+            if (player == 0)
+              gridDates.push({
+                date:
+                  day.getDate() +
+                  "/" +
+                  (day.getMonth() + 1) +
+                  "/" +
+                  day.getFullYear(),
+              })
+          }
+        }
+        //after one player
+        tempAllData.push({ name: results[i].name, data: data })
+      }
+
+      //after all results
+
+      //data management for analysis
+      var res = ""
+      setRankedWinrate("-")
+
+      //34666
+      console.log("tempAllData")
+      console.log(tempAllData)
+      var temp = [
+        0, 154, 308, 462, 616, 770, 924, 1078, 1232, 1386, 1540, 1694, 1848,
+        2002, 2156, 2310, 2464, 2618, 2772, 2926, 3080, 3234, 3388, 3542, 3696,
+        3850, 4004, 4158, 4312, 4466, 4620, 4820, 5020, 5220, 5420, 9999,
+      ]
+      for (let i = 0; i < d.length; i++) {
+        if (localmaxmmr >= temp[i]) ticks.push(temp[i + 1])
+      }
+      var finalAll = []
+      for (let index = 0; index < showCount - 1; index++) {
+        let t = {}
+        for (let j = 0; j < tempAllData.length; j++) {
+          if (tempAllData[j].data[index])
+            t[tempAllData[j].name] = tempAllData[j].data[index].mmr
+        }
+        t["date"] = gridDates[index].date
+        finalAll.push(t)
+      }
+      console.log(finalAll)
+      console.log("LMM:" + localmaxmmr)
+      console.log(ticks)
+      // setRankedWinrate(((wins * 100) / total).toFixed(2))
+      setProfile(finalAll)
+      setHide(false)
+    }
+  }
+
+  //time graph
+  const loadtime = async () => {
+    var loadC = 0
+    if (loading) {
+      // offset=900&&
+      var tempres = []
+      // for (let i = 0; i < players.length; i++) {
+      await Promise.all(
+        players.map(async (element, index) => {
+          await fetch(
+            "https://api.opendota.com/api/players/" +
+              getPlayerID(element) +
+              "/matches/?lobby_type=7",
+            {
+              method: "get",
+            }
+          )
+            .then(async (res) => {
+              if (res.status === 401) {
+                setWrong(true)
+              } else {
+                return await res.json()
+              }
+            })
+            .then(async (r) => {
+              var temp = []
+              console.log("r")
+              console.log(r)
+              if (r == undefined) {
+                r = []
+              }
+              r = r.reverse()
+              for (let i = 0; i < r.length; i++) {
+                const element = r[i]
+                if (element.lobby_type == 7) {
+                  temp.push(element)
+                }
+              }
+              console.log("temp")
+              console.log(temp)
+              tempres.push({ name: element, games: temp })
+              loadC++
+            })
+        })
+      )
+
+      console.log("tempres")
+      console.log(tempres)
+      setResults(tempres)
+      setLoading(false)
+    }
+    if (!loading) {
+      var tempAllData = []
+
+      //data management for analysis
+      const interval = 60
+      var windata = new Array(24 * (60 / interval)).fill(0)
+      var totaldata = new Array(24 * (60 / interval)).fill(0)
+
+      for (let i = 0; i < results.length; i++) {
+        if (true) {
+          var d = results[i].games
+          var tempdata = {}
+          var mmr = getBaseMMR(results[i].name)
+          var rankedMatches = 0
+
+          //data management for analysis
+          for (let i = 0; i < d.length; i++) {
+            const game = d[i]
+            var date = new Date(game.start_time * 1000)
+            const lose =
+              (game.radiant_win && game.player_slot > 127) ||
+              (!game.radiant_win && game.player_slot < 128)
+            const leave = game.leaver_status == 1
+
+            // console.log("date")
+            // console.log(
+            //   date.getHours() * (60 / interval) +
+            //     Math.floor(date.getMinutes() / interval) +
+            //     "   " +
+            //     date.getHours() +
+            //     ":" +
+            //     date.getMinutes()
+            // )
+            totaldata[
+              date.getHours() * (60 / interval) +
+                Math.floor(date.getMinutes() / interval)
+            ] += 1
+            if (lose || leave) {
+              // windata[date.getHours()] -= 1
+            } else {
+              windata[
+                date.getHours() * (60 / interval) +
+                  Math.floor(date.getMinutes() / interval)
+              ] += 1
+            }
+          }
+        }
+      }
+
+      //after all results
+
+      console.log("windata")
+      console.log(windata)
+      console.log("totaldata")
+      console.log(totaldata)
+      //data management for analysis
+      var res = 0
+      for (let i = 0; i < windata.length; i++) {
+        res = ((windata[i] * 100) / totaldata[i]).toFixed(2) > res ? i : res
+        data.push({
+          date:
+            Math.floor(i / (60 / interval)) +
+            ":" +
+            (i % (60 / interval)) * interval,
+          mmr: ((windata[i] * 100) / totaldata[i]).toFixed(2),
+          total: totaldata[i],
+        })
+      }
+      setRankedWinrate(
+        Math.floor(res / (60 / interval)) +
+          ":" +
+          (res % (60 / interval)) * interval
+      )
+
+      //34666
+      console.log("tempAllData")
+      console.log(tempAllData)
+      ticks = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+      console.log(data)
+      console.log("LMM:" + localmaxmmr)
+      console.log(ticks)
+      // setRankedWinrate(((wins * 100) / total).toFixed(2))
+      setProfile(data)
+      setHide(false)
+    }
+  }
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      console.log(payload)
+      var percent = payload.find((element) => element.name == "mmr").value
+      var games = payload.find((element) => element.name == "total").value
+      return (
+        <div
+          className="custom-tooltip"
+          style={{
+            borderRadius: 10,
+            padding: "8px",
+            width: "100px",
+            height: "100px",
+            backgroundColor: "#ffffffaf",
+          }}
+        >
+          <p className="label">{`${label} : ${payload[0].value}`}</p>
+          <p className="intro"></p>
+          <p className="desc">Anything you want can be displayed here.</p>
+        </div>
+      )
+    }
+
+    return null
   }
 
   useEffect(() => {
@@ -370,8 +785,10 @@ export default function Chart(props) {
       width = window.innerWidth
       height = window.innerHeight
     }
-    if (player != "all") load()
-    else loadall()
+    if (player == "all") gameloadall()
+    else if (player == "alldate") timeloadall()
+    else if (player == "time") loadtime()
+    else load()
   }, [hide, loading])
 
   var refresh = () => {
@@ -453,7 +870,27 @@ export default function Chart(props) {
             refresh()
           }}
         >
-          All (beta)
+          All (by game)
+        </Button>
+        <Button
+          variant={player == "alldate" ? "contained" : "outlined"}
+          disabled={loading ? true : false}
+          onClick={() => {
+            setPlayer("alldate")
+            refresh()
+          }}
+        >
+          All (by date)
+        </Button>
+        <Button
+          variant={player == "time" ? "contained" : "outlined"}
+          disabled={loading ? true : false}
+          onClick={() => {
+            setPlayer("time")
+            refresh()
+          }}
+        >
+          Time analysis
         </Button>
       </ButtonGroup>
       {hide ? (
@@ -472,9 +909,19 @@ export default function Chart(props) {
           data={profile}
           margin={{ top: 10, right: 0, left: 0, bottom: 5 }}
         >
-          <XAxis dataKey="date" />
+          <XAxis
+            dataKey="date"
+            interval={
+              player == "time" ? profile.length / 24 - 1 : "preserveEnd"
+            }
+          />
           <YAxis ticks={ticks} domain={[0, ticks[ticks.length - 1]]} />
-          <Tooltip />
+          {player == "time" ? (
+            <Tooltip />
+          ) : (
+            //  content={<CustomTooltip />} />
+            <Tooltip />
+          )}
           <defs>
             {/* <linearGradient
                     id="splitColor"
@@ -519,14 +966,22 @@ export default function Chart(props) {
                       })}
                   </linearGradient> */}
           </defs>
-          {/* <CartesianGrid strokeDasharray="1 10" stroke="#bdc3c7" /> */}
-          {player != "all" ? (
+          {player == "time" ? (
+            <CartesianGrid
+              strokeDasharray="1 5"
+              stroke="#bdc3c7"
+              horizontalPoints={[]}
+            />
+          ) : (
+            ""
+          )}
+          {player != "all" && player != "alldate" ? (
             <React.Fragment>
               <Line
                 type="monotone"
                 dataKey="mmr"
                 // stroke="url(#splitColor)"
-                stroke="#fed330"
+                stroke="#e67e22"
                 yAxisId={0}
                 dot={false}
               />
@@ -537,6 +992,18 @@ export default function Chart(props) {
                 yAxisId={0}
                 dot={false}
               />
+              {player == "time" ? (
+                <Line
+                  type="monotone"
+                  dataKey="total"
+                  // stroke="url(#splitColor)"
+                  stroke="#3498db"
+                  yAxisId={0}
+                  dot={false}
+                />
+              ) : (
+                ""
+              )}
             </React.Fragment>
           ) : (
             players.map((element, index) => {
@@ -709,10 +1176,7 @@ export default function Chart(props) {
       )}
 
       <div className={styles.info}>
-        <Chip
-          label={"new ranked matches: " + rankedMatchCount}
-          color="primary"
-        />
+        <Chip label={"Winrate: " + rankedWinrate + "%"} color="primary" />
         <Chip label={"highest mmr: " + maxmmr} color="primary" />
         <Chip
           label={
