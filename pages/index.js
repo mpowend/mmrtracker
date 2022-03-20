@@ -124,7 +124,8 @@ export default function Chart(props) {
       //     break
       // }
       var wins = 0,
-        total = 0
+        total = 0,
+        req = []
       for (let i = 0; i < d.length; i++) {
         const game = d[i]
         var date = new Date(game.start_time * 1000)
@@ -132,6 +133,9 @@ export default function Chart(props) {
           (game.radiant_win && game.player_slot > 127) ||
           (!game.radiant_win && game.player_slot < 128)
         const leave = game.leaver_status == 1
+        if (game.party_size == null) {
+          req.push(game.match_id)
+        }
         var mmrChange = game.party_size == 1 ? 30 : 20
 
         if (lose || leave) {
@@ -163,6 +167,20 @@ export default function Chart(props) {
           })
         }
       }
+
+      async function sendreqs(gameIdList) {
+        for (let i = 0; i < gameIdList.length; i++) {
+          fetch("https://api.opendota.com/api/request/" + gameIdList[i], {
+            mode: "no-cors",
+            method: "post",
+          })
+          console.log("fetched request")
+          await new Promise((resolve) => setTimeout(resolve, 5000))
+        }
+      }
+
+      console.log("nulls:" + req.length)
+      sendreqs(req)
 
       var temp = [
         0, 154, 308, 462, 616, 770, 924, 1078, 1232, 1386, 1540, 1694, 1848,
@@ -204,17 +222,17 @@ export default function Chart(props) {
   const getBaseMMR = (p) => {
     switch (p) {
       case "mpowend":
-        return 1250
+        return 1460
       case "teramir":
         return 1340
       case "darjaryan":
-        return 980
+        return 1130
       case "lim":
         return 150
       case "forlorn":
         return 2320
       case "netflix":
-        return 2210
+        return 1970
       default:
         return 0
     }
@@ -345,6 +363,10 @@ export default function Chart(props) {
             (game.radiant_win && game.player_slot > 127) ||
             (!game.radiant_win && game.player_slot < 128)
           const leave = game.leaver_status == 1
+          // if (game.party_size == null) {
+          //   fetch("https://api.opendota.com/api/request/" + game.match_id)
+          //   console.log("null! " + game.match_id)
+          // }
           var mmrChange = game.party_size == 1 ? 30 : 20
           rankedMatches += 1
 
@@ -544,6 +566,10 @@ export default function Chart(props) {
               (game.radiant_win && game.player_slot > 127) ||
               (!game.radiant_win && game.player_slot < 128)
             const leave = game.leaver_status == 1
+            // if (game.party_size == null) {
+            //   fetch("https://api.opendota.com/api/request/" + game.match_id)
+            //   console.log("null! " + game.match_id)
+            // }
             var mmrChange = game.party_size == 1 ? 30 : 20
             rankedMatches += 1
 
