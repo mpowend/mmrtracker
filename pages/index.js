@@ -20,7 +20,7 @@ import { Button, ButtonGroup, Chip, Divider } from "@material-ui/core"
 var maxmmr = 0
 var localmaxmmr = 0
 var ticks = []
-var showCount = 500
+var showCount = 300
 var width = 1920
 var height = 1080
 export default function Chart(props) {
