@@ -20,7 +20,7 @@ import { Button, ButtonGroup, Chip, Divider } from "@material-ui/core"
 var maxmmr = 0
 var localmaxmmr = 0
 var ticks = []
-var showCount = 250
+var showCount = 500
 var width = 1920
 var height = 1080
 export default function Chart(props) {
@@ -222,7 +222,7 @@ export default function Chart(props) {
   const getBaseMMR = (p) => {
     switch (p) {
       case "mpowend":
-        return 1460
+        return 1490
       case "teramir":
         return 1340
       case "darjaryan":
@@ -650,7 +650,7 @@ export default function Chart(props) {
       var tempres = []
       // for (let i = 0; i < players.length; i++) {
       await Promise.all(
-        players.map(async (element, index) => {
+        ["mpowend"].map(async (element, index) => {
           await fetch(
             "https://api.opendota.com/api/players/" +
               getPlayerID(element) +
