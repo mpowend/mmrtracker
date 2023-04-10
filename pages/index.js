@@ -61,8 +61,6 @@ export default function Chart(props) {
 
   var load = () => {
     if (loading) {
-      // offset=900&&
-
       var playerID = getPlayerID(player)
       fetch(
         "https://api.opendota.com/api/players/" +
@@ -224,7 +222,7 @@ export default function Chart(props) {
       case "mpowend":
         return 1490
       case "teramir":
-        return 1340
+        return 930
       case "darjaryan":
         return 1130
       case "lim":
