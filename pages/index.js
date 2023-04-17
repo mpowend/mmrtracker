@@ -220,7 +220,7 @@ export default function Chart(props) {
   const getBaseMMR = (p) => {
     switch (p) {
       case "mpowend":
-        return 1490
+        return 1550
       case "teramir":
         return 930
       case "darjaryan":
@@ -856,7 +856,7 @@ export default function Chart(props) {
         >
           Darjaryan
         </Button>
-        <Button
+        {/* <Button
           variant={player == "netflix" ? "contained" : "outlined"}
           disabled={loading ? true : false}
           onClick={() => {
@@ -865,7 +865,7 @@ export default function Chart(props) {
           }}
         >
           Netflix
-        </Button>
+        </Button> */}
         <Button
           variant={player == "lim" ? "contained" : "outlined"}
           disabled={loading ? true : false}
@@ -876,7 +876,7 @@ export default function Chart(props) {
         >
           Lim
         </Button>
-        <Button
+        {/* <Button
           variant={player == "forlorn" ? "contained" : "outlined"}
           disabled={loading ? true : false}
           onClick={() => {
@@ -885,7 +885,7 @@ export default function Chart(props) {
           }}
         >
           Forlorn
-        </Button>
+        </Button> */}
         <Button
           variant={player == "all" ? "contained" : "outlined"}
           disabled={loading ? true : false}
