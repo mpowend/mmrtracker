@@ -5,7 +5,7 @@ import { useRouter } from "next/router"
 import Router from "next/router"
 import { AppContext } from "../context/state"
 import { useCookies } from "react-cookie"
-import ReactLoading from "react-loading"
+import {PacmanLoader} from "react-spinners"
 import {
   LineChart,
   XAxis,
@@ -15,7 +15,8 @@ import {
   Line,
   ReferenceLine,
 } from "recharts"
-import { Button, ButtonGroup, Chip, Divider } from "@material-ui/core"
+import { Button, ButtonGroup, Chip, Divider } from "@mui/material"
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 var maxmmr = 0
 var localmaxmmr = 0
@@ -38,6 +39,13 @@ export default function Chart(props) {
   const [player, setPlayer] = useState("mpowend")
   const [cookies, setCookie] = useCookies(["userid", "token"])
   const [p, setp] = useState()
+  const theme = createTheme({
+    palette: {
+      primary: { main: '#9046f0' },
+      secondary: { main: '#fcc216' },
+    },
+  });
+
 
   console.log(loading)
 
@@ -134,7 +142,7 @@ export default function Chart(props) {
         if (game.party_size == null) {
           req.push(game.match_id)
         }
-        var mmrChange = game.party_size == 1 ? 30 : 20
+        var mmrChange = 25
 
         if (lose || leave) {
           mmrChange = -mmrChange
@@ -696,8 +704,8 @@ export default function Chart(props) {
 
       //data management for analysis
       const interval = 60
-      var windata = new Array(24 * (60 / interval)).fill(0)
-      var totaldata = new Array(24 * (60 / interval)).fill(0)
+      var windata = new Array(7).fill(0)
+      var totaldata = new Array(7).fill(0)
 
       for (let i = 0; i < results.length; i++) {
         if (true) {
@@ -725,15 +733,13 @@ export default function Chart(props) {
             //     date.getMinutes()
             // )
             totaldata[
-              date.getHours() * (60 / interval) +
-                Math.floor(date.getMinutes() / interval)
+              (date.getDay()+1 + 7) % 7
             ] += 1
             if (lose || leave) {
               // windata[date.getHours()] -= 1
             } else {
               windata[
-                date.getHours() * (60 / interval) +
-                  Math.floor(date.getMinutes() / interval)
+                (date.getDay()+1 + 7) % 7
               ] += 1
             }
           }
@@ -747,23 +753,18 @@ export default function Chart(props) {
       console.log("totaldata")
       console.log(totaldata)
       //data management for analysis
-      var res = 0
+      var max = [0,0]
       for (let i = 0; i < windata.length; i++) {
-        res = ((windata[i] * 100) / totaldata[i]).toFixed(2) > res ? i : res
+        if(max[1] < ((windata[i] * 100) / totaldata[i]).toFixed(2)){
+          max = [i, ((windata[i] * 100) / totaldata[i]).toFixed(2)]
+        }
         data.push({
-          date:
-            Math.floor(i / (60 / interval)) +
-            ":" +
-            (i % (60 / interval)) * interval,
+          date: i,
           mmr: ((windata[i] * 100) / totaldata[i]).toFixed(2),
           total: totaldata[i],
         })
       }
-      setRankedWinrate(
-        Math.floor(res / (60 / interval)) +
-          ":" +
-          (res % (60 / interval)) * interval
-      )
+      setRankedWinrate(max[0] + " (" + max[1] + "%)")
 
       //34666
       console.log("tempAllData")
@@ -824,6 +825,7 @@ export default function Chart(props) {
     setHide(true)
   }
   return (
+    <ThemeProvider theme={theme}>
     <div className={styles.container}>
       <ButtonGroup color="secondary">
         <Button
@@ -918,13 +920,21 @@ export default function Chart(props) {
         </Button>
       </ButtonGroup>
       {hide ? (
-        <ReactLoading
-          type="bars"
-          color="#11111155"
-          height={height * 0.85}
-          width={width * 0.4}
+        <div style={
+          {
+            "height" : "85vh",
+            "display" : "flex",
+            "justifyContent": "center",
+            "alignItems": "center"
+          }
+        }>
+        <PacmanLoader
+          color="#AAAAAA"
+          height={height * 0.45}
+          width={width * 0.1}
           className={styles.loading}
         />
+        </div>
       ) : (
         <LineChart
           id="main-chart"
@@ -943,11 +953,12 @@ export default function Chart(props) {
           {player == "time" ? (
             <Tooltip />
           ) : (
-            //  content={<CustomTooltip />} />
+            /*content={<CustomTooltip />} />*/
             <Tooltip />
-          )}
-          <defs>
-            {/* <linearGradient
+          )
+          }
+          {/*<defs>
+            <linearGradient
                     id="splitColor"
                     gradientUnits="userSpaceOnUse"
                     x1="0"
@@ -988,8 +999,8 @@ export default function Chart(props) {
                           )
                         }
                       })}
-                  </linearGradient> */}
-          </defs>
+                  </linearGradient> 
+          </defs> */}
           {player == "time" ? (
             <CartesianGrid
               strokeDasharray="1 5"
@@ -997,7 +1008,7 @@ export default function Chart(props) {
               horizontalPoints={[]}
             />
           ) : (
-            ""
+            null
           )}
           {player != "all" && player != "alldate" ? (
             <React.Fragment>
@@ -1026,7 +1037,7 @@ export default function Chart(props) {
                   dot={false}
                 />
               ) : (
-                ""
+                null
               )}
             </React.Fragment>
           ) : (
@@ -1197,7 +1208,8 @@ export default function Chart(props) {
 
           {/* <Line type="monotone" dataKey="pv" stroke="#387908" yAxisId={1} /> */}
         </LineChart>
-      )}
+      )
+      }
 
       <div className={styles.info}>
         <Chip label={"Winrate: " + rankedWinrate + "%"} color="primary" />
@@ -1213,5 +1225,6 @@ export default function Chart(props) {
         />
       </div>
     </div>
+    </ThemeProvider>
   )
 }
