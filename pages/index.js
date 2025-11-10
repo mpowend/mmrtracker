@@ -142,6 +142,7 @@ export default function Chart(props) {
         if (game.party_size == null) {
           req.push(game.match_id)
         }
+        // var mmrChange = game.party_size == 1 ? 30 : 20
         var mmrChange = 25
 
         if (lose || leave) {
@@ -373,7 +374,8 @@ export default function Chart(props) {
           //   fetch("https://api.opendota.com/api/request/" + game.match_id)
           //   console.log("null! " + game.match_id)
           // }
-          var mmrChange = game.party_size == 1 ? 30 : 20
+          // var mmrChange = game.party_size == 1 ? 30 : 20
+          var mmrChange = 25
           rankedMatches += 1
 
           if (lose || leave) {
@@ -576,7 +578,8 @@ export default function Chart(props) {
             //   fetch("https://api.opendota.com/api/request/" + game.match_id)
             //   console.log("null! " + game.match_id)
             // }
-            var mmrChange = game.party_size == 1 ? 30 : 20
+            // var mmrChange = game.party_size == 1 ? 30 : 20
+            var mmrChange = 25
             rankedMatches += 1
 
             if (lose || leave) {
@@ -656,7 +659,7 @@ export default function Chart(props) {
       var tempres = []
       // for (let i = 0; i < players.length; i++) {
       await Promise.all(
-        ["mpowend"].map(async (element, index) => {
+        ["teramir"].map(async (element, index) => {
           await fetch(
             "https://api.opendota.com/api/players/" +
               getPlayerID(element) +
@@ -946,7 +949,7 @@ export default function Chart(props) {
           <XAxis
             dataKey="date"
             interval={
-              player == "time" ? profile.length / 24 - 1 : "preserveEnd"
+              player == "time" ? 1 : "preserveEnd"
             }
           />
           <YAxis ticks={ticks} domain={[0, ticks[ticks.length - 1]]} />
