@@ -66,6 +66,44 @@ export default function Chart(props) {
     "#e67e22",
     "#167e22",
   ]
+  
+  const getPlayerID = (p) => {
+    switch (p) {
+      case "mpowend":
+        return 358792797
+      case "teramir":
+        return 210899035
+      case "darjaryan":
+        return 491280560
+      case "netflix":
+        return 846545366
+      case "lim":
+        return 387307098
+      case "forlorn":
+        return 212778035
+      default:
+        return 358792797
+    }
+  }
+
+  const getBaseMMR = (p) => {
+    switch (p) {
+      case "mpowend":
+        return 2871
+      case "teramir":
+        return 930
+      case "darjaryan":
+        return 1130
+      case "lim":
+        return 150
+      case "forlorn":
+        return 2320
+      case "netflix":
+        return 1970
+      default:
+        return 0
+    }
+  }
 
   var load = () => {
     if (loading) {
@@ -207,43 +245,6 @@ export default function Chart(props) {
     }
   }
 
-  const getPlayerID = (p) => {
-    switch (p) {
-      case "mpowend":
-        return 358792797
-      case "teramir":
-        return 210899035
-      case "darjaryan":
-        return 491280560
-      case "netflix":
-        return 846545366
-      case "lim":
-        return 387307098
-      case "forlorn":
-        return 212778035
-      default:
-        return 358792797
-    }
-  }
-
-  const getBaseMMR = (p) => {
-    switch (p) {
-      case "mpowend":
-        return 1550
-      case "teramir":
-        return 930
-      case "darjaryan":
-        return 1130
-      case "lim":
-        return 150
-      case "forlorn":
-        return 2320
-      case "netflix":
-        return 1970
-      default:
-        return 0
-    }
-  }
 
   //all players in the same graph
 
